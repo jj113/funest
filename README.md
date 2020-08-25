@@ -9,3 +9,6 @@ fit_fun.R
 
 a possible assertion for fit_fun.R that can be used to tune the tree parameters:
 fit_tune.R
+
+to conduct dynamic predictions for a pre-trained model: 
+fit_pred.R
