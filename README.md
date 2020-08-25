@@ -12,3 +12,5 @@ fit_tune.R
 
 to conduct dynamic predictions for a pre-trained model: 
 fit_pred.R
+
+an example: example.R
