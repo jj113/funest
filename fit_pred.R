@@ -78,7 +78,8 @@ funest_pred = function(funest.fit, long_test, surv_test,
   
   SB = pec(object = rg, formula = fmla,
            traindata = train_data.sub,
-           data=test_data.sub)
+           data=test_data.sub,
+           start = t_star)
   
   upper = which(SB$time > t_pred)[1]
   lower = which(SB$time <= t_pred)[length(which(SB$time <= t_pred))]
