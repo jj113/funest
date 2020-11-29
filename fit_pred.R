@@ -18,41 +18,39 @@ funest_pred = function(funest.fit, long_test, surv_test,
   score_names = model[[4]]
   nofp = model[[5]]
   train_data.sub = model[[6]]
+  phi.train = model[[7]]
+  Xi.train = model[[8]]
+  nbasis = model[[9]]
+  L = model[[10]]
+  multivar.train = model[[11]]
   
-  train_patID = surv_train$id
-  train_npat = length(train_patID)
-  
+  test_patID = surv_test$id
+  test_npat = length(test_patID)
   n_of_tv = length(tv_names)
-  long_combine = rbind(long_train, long_test)
-  combine_patID = unique(long_combine$id)
-  combine_npat = length(combine_patID)
-  combine_tv_list = gen_tv_list(n_of_tv)
-  combine_time_list = list()
-  for(i in 1:combine_npat){
-    tid = combine_patID[i]
-    tdat = long_combine[long_combine$id == tid,]
-    combine_time_list = c(combine_time_list, list(tdat$obstime))
-    temp_tv = tdat[, unlist(tv_names)]
-    for(j in 1:n_of_tv){
-      ttv = as.vector(temp_tv[j])[,1]
-      combine_tv_list[[j]] = c(combine_tv_list[[j]], list(ttv))
-    }
+  
+  # transfer longitudinal outcomes from long to wide
+  multivar.test = array(NA, c(nrow(surv_test), length(unique(long_train$obstime)), n_of_tv))
+  sums = 1
+  for(i in test_patID){
+    
+    visits = long_test$visit[long_test$id == i]
+    multivar.test[sums,visits, 1] = long_test$Y1[long_test$id == i]
+    multivar.test[sums,visits, 2] = long_test$Y2[long_test$id == i]
+    multivar.test[sums,visits, 3]= long_test$Y3[long_test$id == i]
+    
+    sums = sums + 1
   }
   
-  combine_tfobj = gen_tv_list(n_of_tv)
-  for(k in 1:n_of_tv){
-    combine_tfobj[[k]] = funData::as.funData(funData::irregFunData(
-      argvals = combine_time_list, X = combine_tv_list[[k]]))
+  # univariate FPC  
+  Xi.test = NULL
+  for(p in 1:n_of_tv){
+    tmp.ufpca = uPACE(multivar.train[,,p], unique(long_train$obstime), multivar.test[,,p], nbasis=nbasis)
+    Xi.test = cbind(Xi.test, tmp.ufpca$scores) 
   }
   
-  combine_mfobj = funData::multiFunData(combine_tfobj)
-  arg_list = gen_arg_list(n_of_tv, nofp)
-  combine_mfpca = MFPCA::MFPCA(combine_mfobj, M = nofp,
-                               uniExpansions = arg_list)
-  
-  combine_scores = combine_mfpca$scores
-  
-  test_scores = combine_scores[-c(1:train_npat),]
+  # estimate MFPC scores for test subjects
+  mFPCA.test = mFPCA(Xi=Xi.train, phi=phi.train, p=n_of_tv, L=L, predXi=Xi.test, nsurv = nrow(surv_test))
+  test_scores = mFPCA.test$rho
   
   test_covs = cbind(test_scores, surv_test[, unlist(fv_names)])
   colnames(test_covs) = score_names
@@ -86,11 +84,10 @@ funest_pred = function(funest.fit, long_test, surv_test,
   
   btw = c(lower, upper)
   
-  #this is the closest SB to t_pred
-  take_this = which(abs(c(SB$time[lower], SB$time[upper]) - t_pred) == min(abs(c(SB$time[lower], SB$time[upper]) - t_pred)))
+  idx = which(abs(c(SB$time[lower], SB$time[upper]) - t_pred) == min(abs(c(SB$time[lower], SB$time[upper]) - t_pred)))
   
   surv_time = pred.mod$unique.death.times
-  sb_time = SB$time[btw[take_this]]
+  sb_time = SB$time[btw[idx]]
   surv_ind = max(which(surv_time <= sb_time))
   
   pred_pb = pred.mod$survival[,surv_ind]
@@ -98,7 +95,7 @@ funest_pred = function(funest.fit, long_test, surv_test,
   surv_pb = data.frame(ID = surv_test$id,
                        pred_pb = pred_pb)
   
-  rf.sb = SB$AppErr$ranger[btw[take_this]]
+  rf.sb = SB$AppErr$ranger[btw[idx]]
   
   timeEvent = test_data.sub[, c("time", "event")]
   #pred.mod = predict(rg, data = test_data.sub, importance = "none")
@@ -116,3 +113,4 @@ funest_pred = function(funest.fit, long_test, surv_test,
   
   return(list(pred_pb = surv_pb, bs = rf.sb, AUC = auc.m))
 }
+
