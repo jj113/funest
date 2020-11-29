@@ -1,3 +1,5 @@
+#please use this version instead of the R package version (Feb 19, 2020)
+
 source("fit_fun.R")
 source("fit_pred.R")
 source("utilities.R")
