@@ -1,8 +1,6 @@
 # univariate FPCA via principal analysis by conditional estimation(PACE)
 uPACE = function(testData, domain, predData=NULL, nbasis = 10, pve = 0.95, npc = NULL){
   library(MFPCA)
-  #ind = which(rowSums(!is.na(trainData[i,,]))<=2)
-  #testData = testData[-ind,]
   tmp = funData(domain, testData)
   if(is.null(predData)){
     tmp2 = NULL
@@ -76,9 +74,7 @@ predictSurvProb.ranger <- function (object, newdata, times, ...) {
 
 
 cond.prob = function(pred.mod, newdata, Tstart, Tpred){
-  #risk.Tstart = as.numeric(summary(survfit(model, newdata = newdata, se.fit = F, conf.int = F), times = Tstart)$surv)
-  #risk.Tpred = as.numeric(summary(survfit(model, newdata = newdata, se.fit = F, conf.int = F), times = Tpred)$surv)
-  
+ 
   T1 = which(pred.mod$unique.death.times <= Tstart)
   T2 = which(pred.mod$unique.death.times <= Tpred)
   
