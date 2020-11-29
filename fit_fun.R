@@ -64,6 +64,7 @@ funest_fit = function(long_train, surv_train,
   fmla = stats::as.formula(paste("Surv(time,event) ~ ",
                                  paste(score_names, collapse= "+")))
   
+  #---- user note: you may tune the tree parameters before model output
   
   rg = ranger::ranger(fmla, data = train_data.sub, num.trees = noftree,
                       mtry = nofcov, splitrule = split_rule, ...)
