@@ -15,6 +15,7 @@ w = funest_fit(long_train, surv_train, tv_names = list("Y1", "Y2", "Y3"), noftre
                fv_names = list("W"), t_star = 5.5, t_pred = 11)
 
 # given the trained model, we can assess the prediction accuracy on the testing dataset
+# note that trajectories post t_star have already been removed in the validation set. Users need to pre-process data prior to using this function
 pred = funest_pred(w, long_test, surv_test, tv_names = list("Y1", "Y2", "Y3"),
                    fv_names = list("W"), t_star = 5.5, t_pred = 11)
 
